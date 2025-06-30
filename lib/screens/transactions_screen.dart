@@ -7,6 +7,7 @@ import '../utils/currency_helper.dart';
 import '../utils/format_helper.dart';
 import 'package:provider/provider.dart';
 import '../utils/currency_provider.dart';
+import '../utils/app_colors.dart';
 
 final Map<String, IconData> categoryIcons = {
   'Food': Icons.restaurant,
@@ -60,10 +61,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Transactions', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.teal,
-        elevation: 0,
+        title: const Text('Transactions', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.textPrimary,
+        elevation: 4,
+        shadowColor: AppColors.balance.withOpacity(0.2),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
+        ),
       ),
       body: FutureBuilder<List<TransactionModel>>(
         future: _transactionsFuture,
@@ -72,7 +77,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No transactions yet.'));
+            return const Center(child: Text('No transactions yet.', style: TextStyle(color: AppColors.textPrimary)));
           }
           final transactions = snapshot.data!;
 
@@ -86,7 +91,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       child: DropdownButton<String>(
                         value: _selectedCategory ?? 'All',
                         isExpanded: true,
-                        items: _categories.map((cat) => DropdownMenuItem(value: cat, child: Text(cat))).toList(),
+                        dropdownColor: AppColors.background,
+                        style: const TextStyle(color: AppColors.textPrimary),
+                        items: _categories.map((cat) => DropdownMenuItem(value: cat, child: Text(cat, style: const TextStyle(color: AppColors.textPrimary)))).toList(),
                         onChanged: (value) {
                           setState(() {
                             _selectedCategory = value;
@@ -100,7 +107,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       child: DropdownButton<String>(
                         value: _selectedPaymentMethod ?? 'All',
                         isExpanded: true,
-                        items: _paymentMethods.map((pm) => DropdownMenuItem(value: pm, child: Text(pm))).toList(),
+                        dropdownColor: AppColors.background,
+                        style: const TextStyle(color: AppColors.textPrimary),
+                        items: _paymentMethods.map((pm) => DropdownMenuItem(value: pm, child: Text(pm, style: const TextStyle(color: AppColors.textPrimary)))).toList(),
                         onChanged: (value) {
                           setState(() {
                             _selectedPaymentMethod = value;
@@ -122,11 +131,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 2,
+                      color: AppColors.background,
+                      elevation: 3,
+                      shadowColor: isIncome ? AppColors.income.withOpacity(0.08) : AppColors.expense.withOpacity(0.08),
                       child: ListTile(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         leading: CircleAvatar(
-                          backgroundColor: isIncome ? Colors.green : Colors.red,
+                          backgroundColor: isIncome ? AppColors.income : AppColors.expense,
                           child: Icon(
                             categoryIcons[txn.category] ?? Icons.category,
                             color: Colors.white,
@@ -134,24 +145,27 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         ),
                         title: Text(
                           txn.title,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary),
                         ),
                         subtitle: Text(
                           '${txn.category} • ${txn.paymentMethod}\n${DateFormat.yMMMd().format(DateTime.parse(txn.date))}',
-                          style: const TextStyle(fontSize: 13, color: Colors.black54),
+                          style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
                         ),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               (isIncome ? '+ ' : '- ') + formatCurrency(txn.amount, currency),
                               style: TextStyle(
-                                color: isIncome ? Colors.green : Colors.red,
+                                color: isIncome ? AppColors.income : AppColors.expense,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
                               ),
                             ),
+                            const SizedBox(width: 8),
                             PopupMenuButton<String>(
+                              color: AppColors.background,
+                              icon: const Icon(Icons.more_vert, size: 20, color: AppColors.textPrimary),
                               onSelected: (value) async {
                                 if (value == 'edit') {
                                   final result = await Navigator.push(
@@ -167,10 +181,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                 }
                               },
                               itemBuilder: (context) => [
-                                const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                                const PopupMenuItem(value: 'delete', child: Text('Delete')),
+                                const PopupMenuItem(value: 'edit', child: Text('Edit', style: TextStyle(color: AppColors.textPrimary))),
+                                const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: AppColors.textPrimary))),
                               ],
-                              icon: const Icon(Icons.more_vert, size: 20),
                             ),
                           ],
                         ),
@@ -185,9 +198,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: Colors.teal,
-        icon: const Icon(Icons.add),
-        label: const Text('Add Transaction'),
+        backgroundColor: AppColors.balance,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('Add Transaction', style: TextStyle(color: Colors.white)),
         onPressed: () async {
           final result = await Navigator.push(
             context,

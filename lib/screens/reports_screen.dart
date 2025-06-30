@@ -7,6 +7,7 @@ import '../utils/currency_helper.dart';
 import '../utils/format_helper.dart';
 import 'package:provider/provider.dart';
 import '../utils/currency_provider.dart';
+import '../utils/app_colors.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({Key? key}) : super(key: key);
@@ -31,10 +32,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reports', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.teal,
-        elevation: 0,
+        title: const Text('Reports', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.textPrimary,
+        elevation: 4,
+        shadowColor: AppColors.balance.withOpacity(0.2),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
+        ),
       ),
       body: FutureBuilder<List<TransactionModel>>(
         future: _transactionsFuture,
@@ -43,7 +48,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No transactions yet.'));
+            return const Center(child: Text('No transactions yet.', style: TextStyle(color: AppColors.textPrimary)));
           }
           final transactions = snapshot.data!;
 
@@ -55,7 +60,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             }
           }
           final pieSections = <PieChartSectionData>[];
-          final colors = [Colors.teal, Colors.orange, Colors.purple, Colors.blue, Colors.red, Colors.green];
+          final colors = [AppColors.income, AppColors.expense, AppColors.balance, AppColors.yellow, AppColors.green, AppColors.textSecondary];
           int colorIdx = 0;
           categoryTotals.forEach((cat, amt) {
             pieSections.add(PieChartSectionData(
@@ -89,13 +94,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    elevation: 2,
+                    color: AppColors.background,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    elevation: 4,
+                    shadowColor: AppColors.balance.withOpacity(0.08),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         children: [
-                          const Text('Category-wise Spending', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          const Text('Category-wise Spending', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
                           const SizedBox(height: 16),
                           SizedBox(
                             height: 180,
@@ -121,9 +128,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                     color: colors[idx % colors.length],
                                   ),
                                   const SizedBox(width: 4),
-                                  Text(cat, style: const TextStyle(fontSize: 12)),
+                                  Text(cat, style: const TextStyle(fontSize: 12, color: AppColors.textPrimary)),
                                   const SizedBox(width: 4),
-                                  Text(formatCurrency(categoryTotals[cat] ?? 0, currency), style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                                  Text(formatCurrency(categoryTotals[cat] ?? 0, currency), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                                 ],
                               );
                             }).toList(),
@@ -136,14 +143,16 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    elevation: 2,
+                    color: AppColors.background,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    elevation: 4,
+                    shadowColor: AppColors.balance.withOpacity(0.08),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Income vs Expense (Monthly)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          const Text('Income vs Expense (Monthly)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
                           const SizedBox(height: 16),
                           SizedBox(
                             height: 200,
@@ -153,21 +162,23 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                   LineChartBarData(
                                     spots: incomeSpots,
                                     isCurved: true,
-                                    color: Colors.teal,
+                                    color: AppColors.income,
                                     barWidth: 3,
                                     dotData: FlDotData(show: false),
                                   ),
                                   LineChartBarData(
                                     spots: expenseSpots,
                                     isCurved: true,
-                                    color: Colors.red,
+                                    color: AppColors.expense,
                                     barWidth: 3,
                                     dotData: FlDotData(show: false),
                                   ),
                                 ],
                                 titlesData: FlTitlesData(
                                   leftTitles: AxisTitles(
-                                    sideTitles: SideTitles(showTitles: true, reservedSize: 40),
+                                    sideTitles: SideTitles(showTitles: true, reservedSize: 40, getTitlesWidget: (value, meta) {
+                                      return Text(formatCurrency(value, currency), style: const TextStyle(fontSize: 10, color: AppColors.textSecondary));
+                                    }),
                                   ),
                                   bottomTitles: AxisTitles(
                                     sideTitles: SideTitles(
@@ -175,7 +186,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                       getTitlesWidget: (value, meta) {
                                         final idx = value.toInt();
                                         if (idx >= 0 && idx < months.length) {
-                                          return Text(months[idx].substring(5), style: const TextStyle(fontSize: 10));
+                                          return Text(months[idx].substring(5), style: const TextStyle(fontSize: 10, color: AppColors.textSecondary));
                                         }
                                         return const SizedBox.shrink();
                                       },
@@ -192,13 +203,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
                           const SizedBox(height: 8),
                           Row(
                             children: const [
-                              Icon(Icons.show_chart, color: Colors.teal, size: 16),
+                              Icon(Icons.show_chart, color: AppColors.income, size: 16),
                               SizedBox(width: 4),
-                              Text('Income', style: TextStyle(color: Colors.teal)),
+                              Text('Income', style: TextStyle(color: AppColors.income)),
                               SizedBox(width: 16),
-                              Icon(Icons.show_chart, color: Colors.red, size: 16),
+                              Icon(Icons.show_chart, color: AppColors.expense, size: 16),
                               SizedBox(width: 4),
-                              Text('Expense', style: TextStyle(color: Colors.red)),
+                              Text('Expense', style: TextStyle(color: AppColors.expense)),
                             ],
                           ),
                         ],

@@ -3,6 +3,8 @@ import '../models/transaction.dart';
 import '../utils/db_helper.dart';
 import '../utils/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/quick_template_helper.dart';
+import '../models/quick_template.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final TransactionModel? transaction;
@@ -46,10 +48,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     'Bank Transfer': [],
   };
 
+  List<QuickTemplate> _quickTemplates = [];
+
   @override
   void initState() {
     super.initState();
     _loadCustomProviders();
+    _loadQuickTemplates();
     if (widget.transaction != null) {
       final t = widget.transaction!;
       _type = t.type;
@@ -90,6 +95,33 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     }
   }
 
+  Future<void> _loadQuickTemplates() async {
+    final templates = await QuickTemplateHelper.loadTemplates();
+    setState(() {
+      _quickTemplates = templates;
+    });
+  }
+
+  void _fillFormFromTemplate(QuickTemplate t) {
+    setState(() {
+      _type = t.type;
+      _title = t.title;
+      _amount = t.amount;
+      _paymentMethod = t.paymentMethod;
+      _category = t.category;
+      _provider = t.provider;
+      _titleController.text = t.title;
+      _amountController.text = t.amount.toString();
+      if (t.provider != null) {
+        if ((_paymentMethod == 'UPI' || _paymentMethod == 'Card' || _paymentMethod == 'Wallet' || _paymentMethod == 'Bank Transfer') &&
+            !_defaultProviders[_paymentMethod]!.contains(t.provider) &&
+            !_customProviders[_paymentMethod]!.contains(t.provider)) {
+          _customProviders[_paymentMethod]!.add(t.provider!);
+        }
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -110,40 +142,138 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           key: _formKey,
           child: ListView(
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.balance.withOpacity(0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+              if (_quickTemplates.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: Card(
+                    color: AppColors.background,
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                      child: SizedBox(
+                        height: 44,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: _quickTemplates.map((t) => Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: ActionChip(
+                                backgroundColor: t.type == 'income'
+                                    ? AppColors.income.withOpacity(0.85)
+                                    : AppColors.expense.withOpacity(0.85),
+                                avatar: Icon(
+                                  t.type == 'income' ? Icons.arrow_downward : Icons.arrow_upward,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                                label: Text(
+                                  '${t.title} ₹${t.amount} ${t.paymentMethod}${t.provider != null ? ' (${t.provider})' : ''}',
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                ),
+                                onPressed: () => _fillFormFromTemplate(t),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                elevation: 4,
+                                shadowColor: AppColors.balance.withOpacity(0.18),
+                              ),
+                            )).toList(),
+                          ),
+                        ),
+                      ),
                     ),
-                  ],
+                  ),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-                child: ToggleButtons(
-                  borderRadius: BorderRadius.circular(12),
-                  fillColor: AppColors.balance.withOpacity(0.15),
-                  selectedColor: AppColors.textPrimary,
-                  color: AppColors.textSecondary,
-                  borderColor: AppColors.balance,
-                  selectedBorderColor: AppColors.balance,
-                  isSelected: [_type == 'expense', _type == 'income'],
-                  onPressed: (index) {
-                    setState(() {
-                      _type = index == 0 ? 'expense' : 'income';
-                    });
-                  },
-                  children: const [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text('Expense', style: TextStyle(fontWeight: FontWeight.bold)),
+              // --- Income/Expense Selection ---
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeInOut,
+                        decoration: BoxDecoration(
+                          color: _type == 'expense' ? AppColors.expense : AppColors.background,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: _type == 'expense'
+                              ? [BoxShadow(color: AppColors.expense.withOpacity(0.18), blurRadius: 8, offset: const Offset(0, 2))]
+                              : [],
+                          border: Border.all(
+                            color: _type == 'expense' ? AppColors.expense : AppColors.balance,
+                            width: 2,
+                          ),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () {
+                            setState(() {
+                              _type = 'expense';
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.arrow_upward, color: _type == 'expense' ? Colors.white : AppColors.expense, size: 28),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Expense',
+                                  style: TextStyle(
+                                    color: _type == 'expense' ? Colors.white : AppColors.expense,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text('Income', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeInOut,
+                        decoration: BoxDecoration(
+                          color: _type == 'income' ? AppColors.income : AppColors.background,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: _type == 'income'
+                              ? [BoxShadow(color: AppColors.income.withOpacity(0.18), blurRadius: 8, offset: const Offset(0, 2))]
+                              : [],
+                          border: Border.all(
+                            color: _type == 'income' ? AppColors.income : AppColors.balance,
+                            width: 2,
+                          ),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () {
+                            setState(() {
+                              _type = 'income';
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.arrow_downward, color: _type == 'income' ? Colors.white : AppColors.income, size: 28),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Income',
+                                  style: TextStyle(
+                                    color: _type == 'income' ? Colors.white : AppColors.income,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -402,37 +532,74 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.balance,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      _formKey.currentState!.save();
-                      final txn = TransactionModel(
-                        id: widget.transaction?.id,
-                        type: _type,
-                        title: _title,
-                        amount: _amount,
-                        paymentMethod: _paymentMethod,
-                        category: _category,
-                        date: _date.toIso8601String(),
-                        note: _note,
-                        tag: _provider ?? _tag,
-                      );
-                      if (widget.transaction == null) {
-                        await DBHelper.insertTransaction(txn);
-                      } else {
-                        await DBHelper.updateTransaction(txn);
-                      }
-                      Navigator.pop(context, true);
-                    }
-                  },
-                  child: Text(widget.transaction == null ? 'Save' : 'Update'),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.balance,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        onPressed: () async {
+                          if (_formKey.currentState!.validate()) {
+                            _formKey.currentState!.save();
+                            final txn = TransactionModel(
+                              id: widget.transaction?.id,
+                              type: _type,
+                              title: _title,
+                              amount: _amount,
+                              paymentMethod: _paymentMethod,
+                              category: _category,
+                              date: _date.toIso8601String(),
+                              note: _note,
+                              tag: _provider ?? _tag,
+                            );
+                            if (widget.transaction == null) {
+                              await DBHelper.insertTransaction(txn);
+                            } else {
+                              await DBHelper.updateTransaction(txn);
+                            }
+                            Navigator.pop(context, true);
+                          }
+                        },
+                        child: Text(widget.transaction == null ? 'Save' : 'Update'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.income,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                          _formKey.currentState!.save();
+                          final template = QuickTemplate(
+                            type: _type,
+                            title: _title,
+                            amount: _amount,
+                            paymentMethod: _paymentMethod,
+                            category: _category,
+                            provider: _provider,
+                          );
+                          await QuickTemplateHelper.addTemplate(template);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Template saved!')),
+                            );
+                          }
+                        }
+                      },
+                      icon: const Icon(Icons.save),
+                      label: const Text('Save as Template'),
+                    ),
+                  ],
                 ),
               ),
             ],

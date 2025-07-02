@@ -8,6 +8,8 @@ import '../utils/format_helper.dart';
 import 'package:provider/provider.dart';
 import '../utils/currency_provider.dart';
 import '../utils/app_colors.dart';
+import '../utils/quick_template_helper.dart';
+import '../models/quick_template.dart';
 
 final Map<String, IconData> categoryIcons = {
   'Food': Icons.restaurant,
@@ -31,11 +33,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   final List<String> _categories = ['All', 'Food', 'Salary', 'Rent', 'Shopping', 'Others'];
   final List<String> _paymentMethods = ['All', 'Cash', 'Online', 'UPI', 'Bank Transfer'];
   List<TransactionModel> _allTransactions = [];
+  List<QuickTemplate> _quickTemplates = [];
 
   @override
   void initState() {
     super.initState();
     _loadTransactions();
+    _loadQuickTemplates();
   }
 
   void _loadTransactions() async {
@@ -44,6 +48,33 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       _allTransactions = txns;
       _transactionsFuture = Future.value(_applyFilters());
     });
+  }
+
+  Future<void> _loadQuickTemplates() async {
+    final templates = await QuickTemplateHelper.loadTemplates();
+    setState(() {
+      _quickTemplates = templates;
+    });
+  }
+
+  Future<void> _addTransactionFromTemplate(QuickTemplate template) async {
+    final txn = TransactionModel(
+      type: template.type,
+      title: template.title,
+      amount: template.amount,
+      paymentMethod: template.paymentMethod,
+      category: template.category,
+      date: DateTime.now().toIso8601String(),
+      note: null,
+      tag: template.provider,
+    );
+    await DBHelper.insertTransaction(txn);
+    _loadTransactions();
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Added: ${template.title} ${formatCurrency(template.amount, Provider.of<CurrencyProvider>(context, listen: false).currency)}')),
+      );
+    }
   }
 
   List<TransactionModel> _applyFilters() {
@@ -83,6 +114,44 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
           return Column(
             children: [
+              if (_quickTemplates.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: List.generate(_quickTemplates.length, (i) {
+                      final t = _quickTemplates[i];
+                      return Material(
+                        color: Colors.transparent,
+                        elevation: 4,
+                        borderRadius: BorderRadius.circular(16),
+                        child: ActionChip(
+                          backgroundColor: t.type == 'income' ? AppColors.income : AppColors.balance,
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                t.type == 'income' ? Icons.add : Icons.remove,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${t.title} ${formatCurrency(t.amount, currency)} ${t.paymentMethod}${t.provider != null ? ' (${t.provider})' : ''}',
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          onPressed: () => _addTransactionFromTemplate(t),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 4,
+                          shadowColor: AppColors.balance.withOpacity(0.25),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
                 child: Row(

@@ -171,14 +171,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                   '${t.title} ₹${t.amount} ${t.paymentMethod}${t.provider != null ? ' (${t.provider})' : ''}',
                                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                                 ),
-                                onPressed: () => _fillFormFromTemplate(t),
+                      onPressed: () => _fillFormFromTemplate(t),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                 elevation: 4,
                                 shadowColor: AppColors.balance.withOpacity(0.18),
                               ),
-                            )).toList(),
-                          ),
-                        ),
+                    )).toList(),
+                  ),
+                ),
                       ),
                     ),
                   ),
@@ -192,7 +192,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 250),
                         curve: Curves.easeInOut,
-                        decoration: BoxDecoration(
+                decoration: BoxDecoration(
                           color: _type == 'expense' ? AppColors.expense : AppColors.background,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: _type == 'expense'
@@ -204,7 +204,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           ),
                         ),
                         child: InkWell(
-                          borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(16),
                           onTap: () {
                             setState(() {
                               _type = 'expense';
@@ -224,9 +224,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
                                   ),
-                                ),
-                              ],
-                            ),
+                    ),
+                  ],
+                ),
                           ),
                         ),
                       ),
@@ -250,10 +250,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         child: InkWell(
                           borderRadius: BorderRadius.circular(16),
                           onTap: () {
-                            setState(() {
+                    setState(() {
                               _type = 'income';
-                            });
-                          },
+                    });
+                  },
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 18),
                             child: Column(

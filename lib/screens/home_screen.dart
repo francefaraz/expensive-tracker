@@ -14,6 +14,7 @@ import '../utils/app_colors.dart';
 import '../utils/quick_template_helper.dart';
 import '../models/quick_template.dart';
 import 'transactions_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -133,15 +134,12 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: AppColors.textPrimary),
-            onPressed: () async {
-              final selected = await showDialog<String>(
-                context: context,
-                builder: (context) => CurrencyDialog(),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
               );
-              if (selected != null) {
-                Provider.of<CurrencyProvider>(context, listen: false).setCurrency(selected);
-                setState(() {}); // Refresh UI
-              }
             },
           ),
           IconButton(

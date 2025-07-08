@@ -27,10 +27,10 @@ class SummaryCard extends StatelessWidget {
       ),
       child: Container(
         width: width ?? 110,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
               color: color.withOpacity(0.18),
@@ -38,10 +38,10 @@ class SummaryCard extends StatelessWidget {
               offset: const Offset(0, 6),
             ),
           ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             Container(
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.18),
@@ -50,11 +50,11 @@ class SummaryCard extends StatelessWidget {
               padding: const EdgeInsets.all(10),
               child: Icon(icon, color: Colors.white, size: 28),
             ),
-            const SizedBox(height: 12),
+          const SizedBox(height: 12),
             Text(title, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            Text(value, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-          ],
+          const SizedBox(height: 8),
+          Text(value, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+        ],
         ),
       ),
     );

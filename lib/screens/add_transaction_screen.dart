@@ -5,6 +5,7 @@ import '../utils/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/quick_template_helper.dart';
 import '../models/quick_template.dart';
+import '../widgets/interstitial_ad_helper.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final TransactionModel? transaction;
@@ -562,7 +563,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                             } else {
                               await DBHelper.updateTransaction(txn);
                             }
+                            InterstitialAdHelper.showAd(onAdClosed: () {
                             Navigator.pop(context, true);
+                            });
                           }
                         },
                         child: Text(widget.transaction == null ? 'Save' : 'Update'),

@@ -8,6 +8,7 @@ import '../utils/format_helper.dart';
 import 'package:provider/provider.dart';
 import '../utils/currency_provider.dart';
 import '../utils/app_colors.dart';
+import '../widgets/banner_ad_widget.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({Key? key}) : super(key: key);
@@ -222,6 +223,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           );
         },
       ),
+      bottomNavigationBar: const BannerAdWidget(),
     );
   }
 }

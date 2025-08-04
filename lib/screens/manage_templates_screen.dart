@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../models/quick_template.dart';
 import '../utils/quick_template_helper.dart';
+import '../widgets/interstitial_ad_helper.dart';
+import '../widgets/banner_ad_widget.dart';
 
 class ManageTemplatesScreen extends StatefulWidget {
   const ManageTemplatesScreen({Key? key}) : super(key: key);
@@ -60,6 +62,7 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
         _templates.add(added);
       });
       await _saveTemplates();
+      InterstitialAdHelper.showAd();
     }
   }
 
@@ -140,6 +143,7 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
         label: const Text('Add Template', style: TextStyle(color: Colors.white)),
         onPressed: _addTemplate,
       ),
+      bottomNavigationBar: const BannerAdWidget(),
     );
   }
 }

@@ -3,6 +3,11 @@ import '../utils/app_colors.dart';
 import 'manage_templates_screen.dart';
 import 'package:provider/provider.dart';
 import '../utils/currency_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'onboarding_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:async';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -82,7 +87,7 @@ class SettingsScreen extends StatelessWidget {
                     onTap: () async {
                       final currencyProvider = Provider.of<CurrencyProvider>(context, listen: false);
                       final currencies = [
-                        '₹', '₹ INR', '₹ (INR)', 'USD', 'EUR', 'GBP', 'JPY', 'CNY', 'RUB', 'KRW', 'AUD', 'CAD', 'SGD', 'HKD', 'ZAR', 'BRL', 'IDR', 'MYR', 'THB', 'VND', 'PHP', 'PKR', 'BDT', 'LKR', 'NPR', 'MMK', 'KWD', 'SAR', 'AED', 'QAR', 'OMR', 'BHD', 'TWD', 'TRY', 'ILS', 'MXN', 'PLN', 'SEK', 'CHF', 'DKK', 'NOK', 'CZK', 'HUF', 'NZD', 'ARS', 'CLP', 'COP', 'PEN', 'EGP', 'NGN', 'KES', 'GHS', 'TZS', 'UGX', 'MAD', 'DZD', 'TND', 'LBP', 'JOD', 'IQD', 'IRR', 'SDG', 'SOS', 'ETB', 'GEL', 'UAH', 'BYN', 'AZN', 'AMD', 'UZS', 'KZT', 'MNT', 'KHR', 'LAK', 'MMK', 'BND', 'PGK', 'FJD', 'WST', 'TOP', 'VUV', 'SBD', 'XPF', 'XOF', 'XAF', 'XCD', 'BSD', 'BBD', 'BZD', 'GYD', 'SRD', 'TTD', 'JMD', 'HTG', 'DOP', 'BMD', 'KYD', 'ANG', 'AWG', 'BAM', 'HRK', 'MKD', 'RSD', 'ALL', 'MDL', 'ISK', 'MOP', 'MVR', 'SCR', 'MUR', 'NAD', 'BWP', 'SZL', 'LSL', 'ZMW', 'MWK', 'MZN', 'AOA', 'CDF', 'GNF', 'SLL', 'LRD', 'GMD', 'XAG', 'XAU', 'XDR', 'BTC', 'ETH', 'USDT', 'USDC', 'BNB', 'XRP', 'ADA', 'SOL', 'DOGE', 'DOT', 'MATIC', 'SHIB', 'TRX', 'AVAX', 'DAI', 'ATOM', 'LINK', 'UNI', 'LTC', 'BCH', 'XLM', 'ETC', 'FIL', 'APE', 'EOS', 'XTZ', 'AAVE', 'MKR', 'SUSHI', 'COMP', 'YFI', 'SNX', 'CRV', '1INCH', 'BAT', 'ENJ', 'GRT', 'CHZ', 'SAND', 'MANA', 'AXS', 'ALGO', 'FLOW', 'QNT', 'EGLD', 'KSM', 'NEAR', 'FTM', 'RUNE', 'ZEC', 'DASH', 'XEM', 'ZEN', 'KNC', 'OMG', 'ZRX', 'LRC', 'NMR', 'OCEAN', 'BAL', 'BNT', 'REN', 'SRM', 'CVC', 'REP', 'ANT', 'MLN', 'RLC', 'FET', 'AKRO', 'BAND', 'LEND', 'KAVA', 'CREAM', 'SXP', 'TWT', 'COTI', 'RAY', 'PERP', 'ALPHA', 'LINA', 'INJ', 'BAKE', 'BURGER', 'SFP', 'BEL', 'CTK', 'DODO', 'FRONT', 'WING', 'LIT', 'UNFI', 'ACM', 'ATM', 'BAR', 'JUV', 'PSG', 'ASR', 'CITY', 'OG', 'NMR', 'FOR', 'VIDT', 'TRB', 'PNT', 'DIA', 'ORN', 'UTK', 'XVS', 'SUSD', 'BUSD', 'TUSD', 'PAX', 'HUSD', 'USDP', 'GUSD', 'LUSD', 'RSR', 'AMPL', 'FEI', 'FRAX', 'UST', 'MIM', 'SPELL', 'LUNA', 'USTC', 'ANC', 'MIR', 'ORCA', 'RAY', 'SBR', 'SLND', 'SUN', 'C98', 'PORT', 'SNY', 'STEP', 'ATLAS', 'POLIS', 'SAMO', 'COPE', 'ROPE', 'AURY', 'GENE', 'TULIP', 'SOLR', 'MEDIA', 'GRAPE', 'LIKE', 'PRISM', 'SOLA', 'STARS', 'RIN', 'SHDW', 'SLIM', 'SRLY', 'WOO', 'WMT', 'XCAD', 'XPRT', 'XDEFI', 'XMON', 'XNO', 'XSGD', 'XVS', 'YGG', 'ZIL', 'ZKS', 'ZRX', 'ZUSD', 'ZYN',
+                        'INR', r'$', 'EUR', 'GBP', 'JPY', 'CNY', 'RUB', 'KRW', 'AUD', 'CAD', 'SGD', 'HKD', 'ZAR', 'BRL', 'IDR', 'MYR', 'THB', 'VND', 'PHP', 'PKR', 'BDT', 'LKR', 'NPR', 'MMK', 'KWD', 'SAR', 'AED', 'QAR', 'OMR', 'BHD', 'TWD', 'TRY', 'ILS', 'MXN', 'PLN', 'SEK', 'CHF', 'DKK', 'NOK', 'CZK', 'HUF', 'NZD', 'ARS', 'CLP', 'COP', 'PEN', 'EGP', 'NGN', 'KES', 'GHS', 'TZS', 'UGX', 'MAD', 'DZD', 'TND', 'LBP', 'JOD', 'IQD', 'IRR', 'SDG', 'SOS', 'ETB', 'GEL', 'UAH', 'BYN', 'AZN', 'AMD', 'UZS', 'KZT', 'MNT', 'KHR', 'LAK', 'BND', 'PGK', 'FJD', 'WST', 'TOP', 'VUV', 'SBD', 'XPF', 'XOF', 'XAF', 'XCD', 'BSD', 'BBD', 'BZD', 'GYD', 'SRD', 'TTD', 'JMD', 'HTG', 'DOP', 'BMD', 'KYD', 'ANG', 'AWG', 'BAM', 'HRK', 'MKD', 'RSD', 'ALL', 'MDL', 'ISK', 'MOP', 'MVR', 'SCR', 'MUR', 'NAD', 'BWP', 'SZL', 'LSL', 'ZMW', 'MWK', 'MZN', 'AOA', 'CDF', 'GNF', 'SLL', 'LRD', 'GMD', 'XAG', 'XAU', 'XDR', 'BTC', 'ETH', 'USDT', 'USDC', 'BNB', 'XRP', 'ADA', 'SOL', 'DOGE', 'DOT', 'MATIC', 'SHIB', 'TRX', 'AVAX', 'DAI', 'ATOM', 'LINK', 'UNI', 'LTC', 'BCH', 'XLM', 'ETC', 'FIL', 'APE', 'EOS', 'XTZ', 'AAVE', 'MKR', 'SUSHI', 'COMP', 'YFI', 'SNX', 'CRV', '1INCH', 'BAT', 'ENJ', 'GRT', 'CHZ', 'SAND', 'MANA', 'AXS', 'ALGO', 'FLOW', 'QNT', 'EGLD', 'KSM', 'NEAR', 'FTM', 'RUNE', 'ZEC', 'DASH', 'XEM', 'ZEN', 'KNC', 'OMG', 'ZRX', 'LRC', 'NMR', 'OCEAN', 'BAL', 'BNT', 'REN', 'SRM', 'CVC', 'REP', 'ANT', 'MLN', 'RLC', 'FET', 'AKRO', 'BAND', 'LEND', 'KAVA', 'CREAM', 'SXP', 'TWT', 'COTI', 'RAY', 'PERP', 'ALPHA', 'LINA', 'INJ', 'BAKE', 'BURGER', 'SFP', 'BEL', 'CTK', 'DODO', 'FRONT', 'WING', 'LIT', 'UNFI', 'ACM', 'ATM', 'BAR', 'JUV', 'PSG', 'ASR', 'CITY', 'OG', 'NMR', 'FOR', 'VIDT', 'TRB', 'PNT', 'DIA', 'ORN', 'UTK', 'XVS', 'SUSD', 'BUSD', 'TUSD', 'PAX', 'HUSD', 'USDP', 'GUSD', 'LUSD', 'RSR', 'AMPL', 'FEI', 'FRAX', 'UST', 'MIM', 'SPELL', 'LUNA', 'USTC', 'ANC', 'MIR', 'ORCA', 'RAY', 'SBR', 'SLND', 'SUN', 'C98', 'PORT', 'SNY', 'STEP', 'ATLAS', 'POLIS', 'SAMO', 'COPE', 'ROPE', 'AURY', 'GENE', 'TULIP', 'SOLR', 'MEDIA', 'GRAPE', 'LIKE', 'PRISM', 'SOLA', 'STARS', 'RIN', 'SHDW', 'SLIM', 'SRLY', 'WOO', 'WMT', 'XCAD', 'XPRT', 'XDEFI', 'XMON', 'XNO', 'XSGD', 'XVS', 'YGG', 'ZIL', 'ZKS', 'ZRX', 'ZUSD', 'ZYN',
                       ];
                       final selected = await showModalBottomSheet<String>(
                         context: context,
@@ -145,6 +150,92 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 32),
+                // Feedback / Suggestions option
+                Card(
+                  color: AppColors.background.withOpacity(0.97),
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: AppColors.balance.withOpacity(0.08)),
+                  ),
+                  shadowColor: AppColors.balance.withOpacity(0.10),
+                  child: ListTile(
+                    leading: const Icon(Icons.feedback_outlined, color: AppColors.income),
+                    title: const Text('Feedback / Suggestions', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                    onTap: () async {
+                      final Uri emailLaunchUri = Uri(
+                        scheme: 'mailto',
+                        path: 'munexa.studios@gmail.com',
+                        query: Uri.encodeFull('subject=Expense Tracker App Feedback'),
+                      );
+                      await launchUrl(emailLaunchUri);
+                    },
+                  ),
+                ),
+                // Share App option
+                Card(
+                  color: AppColors.background.withOpacity(0.97),
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: AppColors.balance.withOpacity(0.08)),
+                  ),
+                  shadowColor: AppColors.balance.withOpacity(0.10),
+                  child: ListTile(
+                    leading: const Icon(Icons.share, color: AppColors.balance),
+                    title: const Text('Share App', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                    onTap: () async {
+                      const appLink = 'https://play.google.com/store/apps/details?id=com.yourcompany.expensetracker'; // Replace with your real link
+                      await Share.share('Check out this awesome expense tracker app! $appLink');
+                    },
+                  ),
+                ),
+                // Rate Us option
+                Card(
+                  color: AppColors.background.withOpacity(0.97),
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: AppColors.balance.withOpacity(0.08)),
+                  ),
+                  shadowColor: AppColors.balance.withOpacity(0.10),
+                  child: ListTile(
+                    leading: const Icon(Icons.star_rate, color: AppColors.expense),
+                    title: const Text('Rate Us', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                    onTap: () async {
+                      const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.yourcompany.expensetracker'; // Replace with your real link
+                      await launchUrl(Uri.parse(playStoreUrl), mode: LaunchMode.externalApplication);
+                    },
+                  ),
+                ),
+                // Show Onboarding Again option
+                Card(
+                  color: AppColors.background.withOpacity(0.97),
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: AppColors.balance.withOpacity(0.08)),
+                  ),
+                  shadowColor: AppColors.balance.withOpacity(0.10),
+                  child: ListTile(
+                    leading: const Icon(Icons.info_outline, color: AppColors.balance),
+                    title: const Text('Show Onboarding Again', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                    onTap: () async {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('hasSeenOnboarding', false);
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                          builder: (_) => OnboardingScreen(
+                            onDone: () => Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                            ),
+                          ),
+                        ),
+                        (route) => false,
+                      );
+                    },
+                  ),
+                ),
                 // Add more settings options here
               ],
             ),

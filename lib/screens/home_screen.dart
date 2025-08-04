@@ -15,6 +15,10 @@ import '../utils/quick_template_helper.dart';
 import '../models/quick_template.dart';
 import 'transactions_screen.dart';
 import 'settings_screen.dart';
+import '../widgets/banner_ad_widget.dart';
+import 'package:intl/intl.dart';
+import '../widgets/rewarded_ad_helper.dart';
+import 'dart:io';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -133,18 +137,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings, color: AppColors.textPrimary),
-            tooltip: 'Settings',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
-              );
-            },
-          ),
-          IconButton(
             icon: const Icon(Icons.download, color: AppColors.textPrimary),
-            tooltip: 'Export to CSV',
+            tooltip: 'Export your transactions as a CSV file',
             onPressed: () async {
               final txns = _allTransactions;
               if (txns.isEmpty) {
@@ -153,9 +147,112 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
                 return;
               }
-              final path = await ExportHelper.exportTransactionsToCSV(txns);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Exported to $path')),
+              DateTimeRange? pickedRange = await showDateRangePicker(
+                context: context,
+                firstDate: DateTime(2000),
+                lastDate: DateTime.now(),
+                initialDateRange: DateTimeRange(
+                  start: DateTime.now().subtract(const Duration(days: 30)),
+                  end: DateTime.now(),
+                ),
+                builder: (context, child) {
+                  return Theme(
+                    data: Theme.of(context).copyWith(
+                      colorScheme: ColorScheme.dark(
+                        primary: AppColors.balance,
+                        onPrimary: AppColors.textPrimary,
+                        surface: AppColors.background,
+                        onSurface: AppColors.textPrimary,
+                      ),
+                      dialogBackgroundColor: AppColors.background,
+                    ),
+                    child: child!,
+                  );
+                },
+              );
+              if (pickedRange == null) return; // User cancelled
+              final filtered = txns.where((txn) {
+                final date = DateTime.parse(txn.date);
+                return date.isAfter(pickedRange.start.subtract(const Duration(days: 1))) &&
+                       date.isBefore(pickedRange.end.add(const Duration(days: 1)));
+              }).toList();
+              if (filtered.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('No transactions in selected range!')),
+                );
+                return;
+              }
+              final shouldShowAd = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  backgroundColor: AppColors.background,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  title: const Text('Export for Free', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text('Export your transactions as a CSV file. You can open this file in Excel, Google Sheets, or any spreadsheet app.', style: TextStyle(color: AppColors.textSecondary)),
+                      SizedBox(height: 12),
+                      Text('To unlock this export, please watch a short ad. Thank you for supporting us!', style: TextStyle(color: AppColors.textSecondary)),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancel'),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.balance),
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Watch Ad & Export'),
+                    ),
+                  ],
+                ),
+              );
+              if (shouldShowAd != true) return;
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => const Center(child: CircularProgressIndicator()),
+              );
+              bool loadingDialogClosed = false;
+              void closeLoadingDialog() {
+                if (!loadingDialogClosed) {
+                  Navigator.pop(context);
+                  loadingDialogClosed = true;
+                }
+              }
+              RewardedAdHelper.showAd(
+                onRewarded: () async {
+                  try {
+                    closeLoadingDialog();
+                    final path = await ExportHelper.exportTransactionsToCSV(filtered);
+                    final formatter = DateFormat('yyyy-MM-dd');
+                    final rangeStr = '${formatter.format(pickedRange.start)} to ${formatter.format(pickedRange.end)}';
+                    final fileName = path.split(Platform.pathSeparator).last;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Exported $rangeStr to $fileName\nSaved at: $path')),
+                    );
+                  } catch (e) {
+                    closeLoadingDialog();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Export failed. Please try again.')),
+                    );
+                  }
+                },
+                onAdClosed: () {
+                  closeLoadingDialog();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('You need to watch the ad to export.')), // Policy: reward only after ad is watched
+                  );
+                },
+                onAdFailed: () {
+                  closeLoadingDialog();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Ad failed to load. Please try again later.')),
+                  );
+                },
               );
             },
           ),
@@ -168,7 +265,25 @@ class _HomeScreenState extends State<HomeScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No transactions yet.'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.receipt_long, size: 64, color: AppColors.textSecondary),
+                  SizedBox(height: 16),
+                  Text(
+                    'No transactions yet.',
+                    style: TextStyle(fontSize: 18, color: AppColors.textSecondary, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Start tracking your expenses and income!\nTap the + button below to add your first transaction.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            );
           }
           final transactions = snapshot.data!;
           final summary = _calculateSummary(transactions);
@@ -596,6 +711,7 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      bottomNavigationBar: const BannerAdWidget(),
     );
   }
 }

@@ -62,7 +62,58 @@ class _ManageTemplatesScreenState extends State<ManageTemplatesScreen> {
         _templates.add(added);
       });
       await _saveTemplates();
-      InterstitialAdHelper.showAd();
+      
+      // Always show success popup first
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false, // User must tap Continue
+          builder: (context) => ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: AlertDialog(
+              backgroundColor: AppColors.background,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+              title: Row(
+                children: [
+                  Icon(Icons.check_circle, color: AppColors.income, size: 28),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Template Added!',
+                      style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              content: const Text(
+                'Your template has been added successfully! You can now use it to quickly add similar transactions.',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                    Navigator.pop(context); // Close popup
+                    
+                    // Add delay to comply with Google Play Store policies
+                    await Future.delayed(const Duration(milliseconds: 500));
+                    
+                    // Show interstitial ad after popup closes and delay
+                    if (context.mounted) {
+                      InterstitialAdHelper.showAd();
+                    }
+                  },
+                  child: Text(
+                    'Continue',
+                    style: TextStyle(color: AppColors.balance, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
     }
   }
 

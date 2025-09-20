@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Convert SVG to PNG</title>
+    <style>
+        body { margin: 0; padding: 20px; background: #f0f0f0; }
+        .container { text-align: center; }
+        canvas { border: 1px solid #ccc; margin: 10px; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Track My Money App Icon</h2>
+        <div id="svgContainer"></div>
+        <canvas id="canvas" width="512" height="512"></canvas>
+        <br>
+        <button onclick="convertToPNG()">Download PNG</button>
+        <button onclick="convertToPNG(1024)">Download 1024x1024</button>
+    </div>
+
+    <script>
+        // SVG content
+        const svgContent = `
+        <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Background -->
+            <rect width="512" height="512" rx="120" fill="url(#bgGradient)"/>
+            
+            <!-- Wallet -->
+            <rect x="140" y="180" width="232" height="152" rx="16" fill="white" stroke="#2E7D32" stroke-width="6"/>
+            <rect x="140" y="180" width="232" height="40" rx="16" fill="#4CAF50" stroke="#2E7D32" stroke-width="6"/>
+            
+            <!-- Money Bills -->
+            <rect x="160" y="200" width="50" height="30" rx="4" fill="#FFD700"/>
+            <rect x="220" y="200" width="50" height="30" rx="4" fill="#FFD700"/>
+            <rect x="280" y="200" width="50" height="30" rx="4" fill="#FFD700"/>
+            <rect x="340" y="200" width="50" height="30" rx="4" fill="#FFD700"/>
+            
+            <!-- Chart -->
+            <rect x="160" y="260" width="20" height="40" rx="3" fill="#2196F3"/>
+            <rect x="190" y="260" width="20" height="60" rx="3" fill="#2196F3"/>
+            <rect x="220" y="260" width="20" height="30" rx="3" fill="#2196F3"/>
+            <rect x="250" y="260" width="20" height="50" rx="3" fill="#2196F3"/>
+            <rect x="280" y="260" width="20" height="70" rx="3" fill="#2196F3"/>
+            <rect x="310" y="260" width="20" height="45" rx="3" fill="#2196F3"/>
+            <rect x="340" y="260" width="20" height="55" rx="3" fill="#2196F3"/>
+            
+            <!-- Plus -->
+            <circle cx="256" cy="360" r="24" fill="#FF5722"/>
+            <rect x="248" y="348" width="16" height="32" rx="8" fill="white"/>
+            <rect x="240" y="356" width="32" height="16" rx="8" fill="white"/>
+            
+            <defs>
+                <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#4CAF50;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#2E7D32;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+        </svg>`;
+
+        // Display SVG
+        document.getElementById('svgContainer').innerHTML = svgContent;
+
+        function convertToPNG(size = 512) {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Create image from SVG
+            const img = new Image();
+            const svgBlob = new Blob([svgContent], {type: 'image/svg+xml'});
+            const url = URL.createObjectURL(svgBlob);
+            
+            img.onload = function() {
+                // Clear canvas
+                ctx.clearRect(0, 0, size, size);
+                
+                // Draw image
+                ctx.drawImage(img, 0, 0, size, size);
+                
+                // Download
+                const link = document.createElement('a');
+                link.download = 'app_icon_' + size + 'x' + size + '.png';
+                link.href = canvas.toDataURL();
+                link.click();
+                
+                URL.revokeObjectURL(url);
+            };
+            
+            img.src = url;
+        }
+    </script>
+</body>
+</html> 

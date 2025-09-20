@@ -9,7 +9,8 @@ import '../widgets/interstitial_ad_helper.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final TransactionModel? transaction;
-  const AddTransactionScreen({Key? key, this.transaction}) : super(key: key);
+  final VoidCallback? onTransactionSaved; // Add callback for home page refresh
+  const AddTransactionScreen({Key? key, this.transaction, this.onTransactionSaved}) : super(key: key);
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
@@ -17,6 +18,7 @@ class AddTransactionScreen extends StatefulWidget {
 
 class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
+  bool _hasPopped = false;
   String _type = 'expense';
   String _title = '';
   double _amount = 0.0;
@@ -27,13 +29,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String? _tag;
   String? _provider;
   bool _showAddProviderField = false;
+  String? _creditCardName;
+  bool _isPaidOff = false;
   final TextEditingController _newProviderController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
   final TextEditingController _tagController = TextEditingController();
 
-  final List<String> _paymentMethods = ['Cash', 'Online', 'UPI', 'Bank Transfer'];
+  final List<String> _paymentMethods = ['Cash', 'Online', 'UPI', 'Bank Transfer', 'Credit Card'];
   final List<String> _categories = ['Food', 'Salary', 'Rent', 'Shopping', 'Others'];
 
   final Map<String, List<String>> _defaultProviders = {
@@ -41,12 +45,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     'Card': ['Axis', 'HDFC', 'SBI', 'ICICI', 'Other'],
     'Wallet': ['Amazon Pay', 'Mobikwik', 'Paytm Wallet', 'Other'],
     'Bank Transfer': ['SBI', 'HDFC', 'ICICI', 'Axis', 'Other'],
+    'Credit Card': ['HDFC', 'SBI', 'ICICI', 'Axis', 'Kotak', 'Yes Bank', 'Other'],
   };
   Map<String, List<String>> _customProviders = {
     'UPI': [],
     'Card': [],
     'Wallet': [],
     'Bank Transfer': [],
+    'Credit Card': [],
   };
 
   List<QuickTemplate> _quickTemplates = [];
@@ -67,11 +73,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       _note = t.note;
       _tag = t.tag;
       _provider = t.tag;
+      _creditCardName = t.creditCardName;
+      _isPaidOff = t.isPaidOff;
       _titleController.text = t.title;
       _amountController.text = t.amount.toString();
       _noteController.text = t.note ?? '';
       _tagController.text = t.tag ?? '';
-      if ((_paymentMethod == 'UPI' || _paymentMethod == 'Card' || _paymentMethod == 'Wallet' || _paymentMethod == 'Bank Transfer') && t.tag != null) {
+      if ((_paymentMethod == 'UPI' || _paymentMethod == 'Card' || _paymentMethod == 'Wallet' || _paymentMethod == 'Bank Transfer' || _paymentMethod == 'Credit Card') && t.tag != null) {
         if (!_defaultProviders[_paymentMethod]!.contains(t.tag) && !_customProviders[_paymentMethod]!.contains(t.tag)) {
           _customProviders[_paymentMethod]!.add(t.tag!);
         }
@@ -344,7 +352,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     borderSide: const BorderSide(color: AppColors.income, width: 2),
                   ),
                 ),
-                items: ['Cash', 'UPI', 'Card', 'Bank Transfer', 'Wallet']
+                items: ['Cash', 'UPI', 'Card', 'Bank Transfer', 'Wallet', 'Credit Card']
                     .map((pm) => DropdownMenuItem(value: pm, child: Text(pm, style: const TextStyle(color: AppColors.textPrimary))))
                     .toList(),
                 onChanged: (value) {
@@ -355,7 +363,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   });
                 },
               ),
-              if (_paymentMethod == 'UPI' || _paymentMethod == 'Card' || _paymentMethod == 'Wallet' || _paymentMethod == 'Bank Transfer')
+              if (_paymentMethod == 'UPI' || _paymentMethod == 'Card' || _paymentMethod == 'Wallet' || _paymentMethod == 'Bank Transfer' || _paymentMethod == 'Credit Card')
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -433,6 +441,51 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           ],
                         ),
                       ),
+                    // Credit Card specific fields
+                    if (_paymentMethod == 'Credit Card') ...[
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: _creditCardName,
+                        dropdownColor: AppColors.background,
+                        style: const TextStyle(color: AppColors.textPrimary),
+                        decoration: InputDecoration(
+                          labelText: 'Credit Card Name',
+                          labelStyle: const TextStyle(color: AppColors.textSecondary),
+                          filled: true,
+                          fillColor: AppColors.background,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: AppColors.balance, width: 1),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: AppColors.income, width: 2),
+                          ),
+                        ),
+                        items: _defaultProviders['Credit Card']!
+                            .map((card) => DropdownMenuItem(value: card, child: Text(card, style: const TextStyle(color: AppColors.textPrimary))))
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _creditCardName = value;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      SwitchListTile(
+                        title: const Text('Mark as Paid Off', style: TextStyle(color: AppColors.textPrimary)),
+                        subtitle: const Text('Check if you\'ve already paid this credit card bill', style: TextStyle(color: AppColors.textSecondary)),
+                        value: _isPaidOff,
+                        onChanged: (value) {
+                          setState(() {
+                            _isPaidOff = value;
+                          });
+                        },
+                        activeColor: AppColors.income,
+                        inactiveThumbColor: AppColors.textSecondary,
+                      ),
+                    ],
                   ],
                 ),
               const SizedBox(height: 16),
@@ -557,15 +610,94 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                               date: _date.toIso8601String(),
                               note: _note,
                               tag: _provider ?? _tag,
+                              isCreditCard: _paymentMethod == 'Credit Card',
+                              creditCardName: _paymentMethod == 'Credit Card' ? _creditCardName : null,
+                              isPaidOff: _paymentMethod == 'Credit Card' ? _isPaidOff : false,
                             );
-                            if (widget.transaction == null) {
-                              await DBHelper.insertTransaction(txn);
-                            } else {
-                              await DBHelper.updateTransaction(txn);
+                            
+                            try {
+                              if (widget.transaction == null) {
+                                await DBHelper.insertTransaction(txn);
+                              } else {
+                                await DBHelper.updateTransaction(txn);
+                              }
+                              
+                              // Always show success popup first
+                              if (context.mounted) {
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: false, // User must tap Continue
+                                  builder: (context) => ConstrainedBox(
+                                    constraints: const BoxConstraints(maxWidth: 400),
+                                    child: AlertDialog(
+                                      backgroundColor: AppColors.background,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                      contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                                      title: Row(
+                                        children: [
+                                          Icon(Icons.check_circle, color: AppColors.income, size: 28),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Text(
+                                              widget.transaction == null ? 'Transaction Saved!' : 'Transaction Updated!',
+                                              style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      content: Text(
+                                        widget.transaction == null 
+                                          ? 'Your ${_type == 'income' ? 'income' : 'expense'} has been saved successfully!'
+                                          : 'Your transaction has been updated successfully!',
+                                        style: const TextStyle(color: AppColors.textSecondary),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () async {
+                                            Navigator.pop(context); // Close popup
+                                            
+                                            // Add delay to comply with Google Play Store policies
+                                            await Future.delayed(const Duration(milliseconds: 500));
+                                            
+                                            // Show interstitial ad after popup closes and delay
+                                            if (context.mounted) {
+                                              InterstitialAdHelper.showAd(onAdClosed: () {
+                                                // Trigger refresh callback after ad closes
+                                                if (widget.onTransactionSaved != null) {
+                                                  widget.onTransactionSaved!();
+                                                }
+                                                if (!mounted || _hasPopped) return;
+                                                _hasPopped = true;
+                                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                                  if (mounted) {
+                                                    Navigator.of(context).maybePop(true);
+                                                  }
+                                                });
+                                              });
+                                            }
+                                          },
+                                          child: Text(
+                                            'Continue',
+                                            style: TextStyle(color: AppColors.balance, fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              // Show error if something goes wrong
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error: ${e.toString()}'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
                             }
-                            InterstitialAdHelper.showAd(onAdClosed: () {
-                            Navigator.pop(context, true);
-                            });
                           }
                         },
                         child: Text(widget.transaction == null ? 'Save' : 'Update'),
@@ -591,11 +723,83 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                             category: _category,
                             provider: _provider,
                           );
-                          await QuickTemplateHelper.addTemplate(template);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Template saved!')),
-                            );
+                          
+                          try {
+                            await QuickTemplateHelper.addTemplate(template);
+                            
+                            // Always show success popup first
+                            if (context.mounted) {
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false, // User must tap Continue
+                                builder: (context) => ConstrainedBox(
+                                  constraints: const BoxConstraints(maxWidth: 400),
+                                  child: AlertDialog(
+                                    backgroundColor: AppColors.background,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                    contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                                    title: Row(
+                                      children: [
+                                        Icon(Icons.check_circle, color: AppColors.income, size: 28),
+                                        const SizedBox(width: 12),
+                                        const Expanded(
+                                          child: Text(
+                                            'Template Saved!',
+                                            style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    content: const Text(
+                                      'Your template has been saved successfully! You can now use it to quickly add similar transactions.',
+                                      style: TextStyle(color: AppColors.textSecondary),
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () async {
+                                          Navigator.pop(context); // Close popup
+                                          
+                                          // Add delay to comply with Google Play Store policies
+                                          await Future.delayed(const Duration(milliseconds: 500));
+                                          
+                                          // Show interstitial ad after popup closes and delay
+                                          if (context.mounted) {
+                                            InterstitialAdHelper.showAd(onAdClosed: () {
+                                              // Call callback to refresh home page data
+                                              if (widget.onTransactionSaved != null) {
+                                                widget.onTransactionSaved!();
+                                              }
+                                              if (!mounted || _hasPopped) return;
+                                              _hasPopped = true;
+                                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                                if (mounted) {
+                                                  Navigator.of(context).maybePop(true);
+                                                }
+                                              });
+                                            });
+                                          }
+                                        },
+                                        child: Text(
+                                          'Continue',
+                                          style: TextStyle(color: AppColors.balance, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            // Show error if something goes wrong
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error: ${e.toString()}'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
                           }
                         }
                       },

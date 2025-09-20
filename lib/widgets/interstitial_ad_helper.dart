@@ -6,7 +6,7 @@ class InterstitialAdHelper {
 
   static void loadAd() {
     InterstitialAd.load(
-      adUnitId: 'ca-app-pub-3940256099942544/1033173712', // Test Ad Unit
+      adUnitId: 'ca-app-pub-6920519399704945/9735083231', // Real Interstitial Ad Unit ID
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
@@ -20,7 +20,11 @@ class InterstitialAdHelper {
     );
   }
 
-  static void showAd({void Function()? onAdClosed}) {
+  static void showAd({void Function()? onAdClosed}) async {
+    // Add minimum delay to comply with Google Play Store policies
+    // This ensures ads don't show immediately after user actions
+    await Future.delayed(const Duration(milliseconds: 1000));
+    
     if (_isAdLoaded && _interstitialAd != null) {
       _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (ad) {

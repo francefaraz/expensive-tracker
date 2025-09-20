@@ -29,7 +29,10 @@ class DBHelper {
             category TEXT,
             date TEXT,
             note TEXT,
-            tag TEXT
+            tag TEXT,
+            isCreditCard INTEGER DEFAULT 0,
+            creditCardName TEXT,
+            isPaidOff INTEGER DEFAULT 0
           )
         ''');
       },
@@ -62,5 +65,70 @@ class DBHelper {
     );
   }
 
-  // Add more methods for update, delete, filter, etc.
+  // Get only credit card transactions
+  static Future<List<TransactionModel>> getCreditCardTransactions() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'transactions', 
+      where: 'isCreditCard = ?', 
+      whereArgs: [1],
+      orderBy: 'date DESC'
+    );
+    return List.generate(maps.length, (i) => TransactionModel.fromMap(maps[i]));
+  }
+
+  // Get transactions that affect main balance (exclude unpaid credit card transactions)
+  static Future<List<TransactionModel>> getMainBalanceTransactions() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'transactions', 
+      where: 'isCreditCard = 0 OR (isCreditCard = 1 AND isPaidOff = 1)', 
+      orderBy: 'date DESC'
+    );
+    return List.generate(maps.length, (i) => TransactionModel.fromMap(maps[i]));
+  }
+
+  // Get unpaid credit card debt
+  static Future<double> getCreditCardDebt() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'transactions', 
+      where: 'isCreditCard = ? AND isPaidOff = ?', 
+      whereArgs: [1, 0]
+    );
+    
+    double totalDebt = 0.0;
+    for (var map in maps) {
+      final txn = TransactionModel.fromMap(map);
+      if (txn.type == 'expense') {
+        totalDebt += txn.amount;
+      } else {
+        totalDebt -= txn.amount; // Income reduces debt
+      }
+    }
+    return totalDebt;
+  }
+
+  // Mark credit card transaction as paid off
+  static Future<int> markCreditCardPaid(int id) async {
+    final db = await database;
+    return await db.update(
+      'transactions',
+      {'isPaidOff': 1},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // Get credit card transactions by card name
+  static Future<List<TransactionModel>> getCreditCardTransactionsByCard(String cardName) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'transactions', 
+      where: 'isCreditCard = ? AND creditCardName = ?', 
+      whereArgs: [1, cardName],
+      orderBy: 'date DESC'
+    );
+    return List.generate(maps.length, (i) => TransactionModel.fromMap(maps[i]));
+  }
 }

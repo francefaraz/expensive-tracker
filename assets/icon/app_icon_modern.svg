@@ -1,0 +1,40 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="100" fill="url(#bgGradient)"/>
+  
+  <!-- Main Wallet -->
+  <rect x="140" y="160" width="232" height="192" rx="20" fill="white" stroke="#2E7D32" stroke-width="6"/>
+  
+  <!-- Wallet Fold -->
+  <rect x="140" y="160" width="232" height="48" rx="20" fill="#4CAF50" stroke="#2E7D32" stroke-width="6"/>
+  
+  <!-- Money Bills -->
+  <rect x="160" y="180" width="50" height="32" rx="4" fill="#FFD700"/>
+  <rect x="220" y="180" width="50" height="32" rx="4" fill="#FFD700"/>
+  <rect x="280" y="180" width="50" height="32" rx="4" fill="#FFD700"/>
+  <rect x="340" y="180" width="50" height="32" rx="4" fill="#FFD700"/>
+  
+  <!-- Chart Bars -->
+  <rect x="160" y="240" width="20" height="40" rx="3" fill="#2196F3"/>
+  <rect x="190" y="240" width="20" height="60" rx="3" fill="#2196F3"/>
+  <rect x="220" y="240" width="20" height="30" rx="3" fill="#2196F3"/>
+  <rect x="250" y="240" width="20" height="50" rx="3" fill="#2196F3"/>
+  <rect x="280" y="240" width="20" height="70" rx="3" fill="#2196F3"/>
+  <rect x="310" y="240" width="20" height="45" rx="3" fill="#2196F3"/>
+  <rect x="340" y="240" width="20" height="55" rx="3" fill="#2196F3"/>
+  
+  <!-- Plus Button -->
+  <circle cx="256" cy="320" r="24" fill="#FF5722"/>
+  <rect x="248" y="308" width="16" height="24" rx="8" fill="white"/>
+  <rect x="240" y="316" width="24" height="16" rx="8" fill="white"/>
+  
+  <!-- Dollar Sign -->
+  <text x="256" y="280" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#2E7D32">$</text>
+  
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4CAF50;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2E7D32;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+</svg> 

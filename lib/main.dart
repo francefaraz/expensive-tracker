@@ -84,7 +84,7 @@ class _MyAppState extends State<MyApp> {
           ),
           ElevatedButton(
             onPressed: () async {
-              const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.yourcompany.expensetracker'; // Replace with your real link
+              const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.munexa.trackmymoney'; // Updated with correct package name
               await prefs.setBool('hasRated', true);
               Navigator.pop(context);
               await launchUrl(Uri.parse(playStoreUrl), mode: LaunchMode.externalApplication);

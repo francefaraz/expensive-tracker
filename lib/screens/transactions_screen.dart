@@ -56,11 +56,24 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   }
 
   void _loadTransactions() async {
-    final txns = await DBHelper.getTransactions();
-    setState(() {
-      _allTransactions = txns;
-      _transactionsFuture = Future.value(_applyFilters());
-    });
+    try {
+      final txns = await DBHelper.getTransactions();
+      if (mounted) {
+        setState(() {
+          _allTransactions = txns;
+          _transactionsFuture = Future.value(_applyFilters());
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading transactions: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _loadQuickTemplates() async {
@@ -341,7 +354,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                   final result = await Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => AddTransactionScreen(transaction: txn),
+                                      builder: (_) => AddTransactionScreen(
+                                        transaction: txn,
+                                        onTransactionSaved: _loadTransactions, // Pass callback
+                                      ),
                                     ),
                                   );
                                   if (result == true) _loadTransactions();
@@ -374,10 +390,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         onPressed: () async {
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+            MaterialPageRoute(builder: (_) => AddTransactionScreen(
+              onTransactionSaved: _loadTransactions, // Pass callback to refresh data
+            )),
           );
           if (result == true) {
-            _loadTransactions();
+            _loadTransactions(); // Also keep this as backup
           }
         },
       ),

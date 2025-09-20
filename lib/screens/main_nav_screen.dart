@@ -3,6 +3,7 @@ import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
 import 'home_screen.dart';
 import 'transactions_screen.dart';
 import 'reports_screen.dart';
+import 'credit_card_screen.dart';
 import 'settings_screen.dart';
 import '../utils/app_colors.dart';
 
@@ -20,6 +21,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
     const HomeScreen(),
     const TransactionsScreen(),
     const ReportsScreen(),
+    const CreditCardScreen(),
     const SettingsScreen(),
   ];
 
@@ -48,6 +50,10 @@ class _MainNavScreenState extends State<MainNavScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.pie_chart),
             label: 'Reports',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.credit_card),
+            label: 'Credit Card',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),

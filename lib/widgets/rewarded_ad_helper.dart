@@ -6,7 +6,7 @@ class RewardedAdHelper {
 
   static void loadAd() {
     RewardedAd.load(
-      adUnitId: 'ca-app-pub-3940256099942544/5224354917', // Test Ad Unit
+      adUnitId: 'ca-app-pub-6920519399704945/8422001568', // Real Rewarded Ad Unit ID
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
